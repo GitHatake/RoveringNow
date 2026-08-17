@@ -16,7 +16,9 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "verify": "npm run lint && npm run typecheck && npm run test"
+    "verify": "npm run lint && npm run typecheck && npm run test",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset": "rm -rf .data && tsx scripts/seed.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -26,6 +28,7 @@
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "server-only": "^0.0.1",
     "web-push": "^3.6.7",
     "zod": "^4.4.3"
   },
@@ -38,6 +41,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.3.1",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.0",
     "vitest": "^4.1.10"
   }
