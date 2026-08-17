@@ -18,10 +18,9 @@ export const viewport: Viewport = {
   initialScale: 1,
   // 端末の文字サイズ設定に追随させるため、拡大を禁じない
   maximumScale: 5,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafaf9' },
-    { media: '(prefers-color-scheme: dark)', color: '#1c1917' },
-  ],
+  // テーマは白ベースに固定するため、端末設定で切り替えない（決定 T-79）
+  themeColor: '#f7f9fa',
+  colorScheme: 'light',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

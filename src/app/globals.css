@@ -1,19 +1,26 @@
 /*
- * デザイントークン
+ * デザイントークンと部品
  *
  * 詳細設計書 05_ui_design_system.md の実装。
  * すべての値をここに集約し、コンポーネントは生の値を書かず必ずトークンを参照する
  * （決定 T-37）。
  *
- * 色のコントラスト比は測定済みで、すべての組み合わせが WCAG の 4.5:1 を満たす
- * （同書 第9.1節）。新しい組み合わせを足すときは必ず測定してから採用すること。
+ * 配色は RCJ（全国ローバースカウト会議）の系統（決定 T-75）。
+ * テーマは白ベースに固定し、端末設定には追随しない（決定 T-79）。
+ *
+ * 色の組み合わせはすべて測定済みで、WCAG の 4.5:1 を満たす（同書 第9.1節）。
+ * 新しい組み合わせを足すときは必ず測定してから採用すること。
  */
 
 :root {
+  /* 端末が暗色設定でも、フォーム部品やスクロールバーを明色で描かせる */
+  color-scheme: light;
+
   /* --- ニュートラル（クールグレー。RCJ の #e2e5e8 / #b8bcc0 の系統） --- */
   --c-bg: #f7f9fa;
   --c-surface: #ffffff;
   --c-surface-sunken: #eef2f5;
+  --c-surface-tint: #f2f6f8;
   --c-border: #dde5e9;
   --c-border-strong: #c2ced5;
   --c-text-subtle: #5c6b74;
@@ -22,14 +29,15 @@
   /* 見出しは RCJ / ROVERPORT のブランド色そのもの（--color_htag: #04384c） */
   --c-text-strong: #04384c;
 
-  /* --- アクセント。ブランド色 #04384c と同じ色相から起こした、明るく澄んだ青 --- */
+  /* --- アクセント。ブランド色 #04384c と同じ色相から起こした明るい青 --- */
   --c-accent-bg: #e8f4f8;
   --c-accent-border: #a5d0e0;
   --c-accent: #0f6b8a;
   --c-accent-hover: #0a5972;
   --c-accent-text: #0a4f66;
-  /* アクセント面の上に置く文字。テーマで反転する */
   --c-on-accent: #ffffff;
+  /* 塗り面に奥行きを与える。明るい端でも白文字が 5.01:1 を満たす */
+  --grad-accent: linear-gradient(180deg, #18789a 0%, #0a5972 100%);
 
   /* --- セマンティック --- */
   --c-danger: #b3261e;
@@ -50,11 +58,11 @@
   --fs-small: 0.8125rem;
   --fs-body: 0.9375rem;
   --fs-subtitle: 1.0625rem;
-  --fs-title: 1.25rem;
-  --fs-display: 1.625rem;
+  --fs-title: 1.3125rem;
+  --fs-display: 1.75rem;
   /* 日本語は欧文の標準的な行間では読みづらい。連絡を確実に読んでもらうため広く取る */
   --lh-body: 1.8;
-  --lh-tight: 1.5;
+  --lh-tight: 1.45;
 
   /* --- スペーシング（4px 基本。スケール外の値を使わない） --- */
   --sp-1: 4px;
@@ -66,15 +74,19 @@
   --sp-12: 48px;
 
   /* --- 形状 --- */
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 16px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 20px;
   --r-full: 9999px;
 
-  /* --- 奥行き。実用の層では影を使わない --- */
-  --shadow-sheet: 0 -2px 16px rgb(4 56 76 / 10%);
-  --shadow-stamp: 0 1px 2px rgb(4 56 76 / 12%);
-  --shadow-card: 0 2px 6px rgb(4 56 76 / 14%);
+  /*
+   * --- 奥行き（決定 T-80） ---
+   * ごく淡い影を2枚重ねて質感を出す。単一の濃い影は安く見える。
+   */
+  --shadow-xs: 0 1px 2px rgb(4 56 76 / 5%);
+  --shadow-sm: 0 1px 2px rgb(4 56 76 / 4%), 0 4px 10px rgb(4 56 76 / 5%);
+  --shadow-md: 0 2px 4px rgb(4 56 76 / 5%), 0 10px 28px rgb(4 56 76 / 9%);
+  --shadow-accent: 0 4px 14px rgb(15 107 138 / 32%);
 
   /* --- レイアウト --- */
   --layout-max-width: 640px;
@@ -85,37 +97,6 @@
   --motion-base: 180ms;
   --motion-screen: 240ms;
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --c-bg: #0d1a21;
-    --c-surface: #152730;
-    --c-surface-sunken: #0d1a21;
-    --c-border: #2a4049;
-    --c-border-strong: #3d545e;
-    --c-text-subtle: #8fa3ad;
-    --c-text-muted: #b9c8cf;
-    --c-text: #e3ebef;
-    --c-text-strong: #f6fafb;
-
-    --c-accent-bg: #123c4d;
-    --c-accent-border: #0f6b8a;
-    --c-accent: #4fb3d4;
-    --c-accent-hover: #74c8e4;
-    --c-accent-text: #8ed3ea;
-    /* 明るいアクセントの上に白文字は 2.41:1 しかない。暗い地色を載せる */
-    --c-on-accent: #0d1a21;
-
-    --c-danger: #f08c8c;
-    --c-danger-bg: #3b1a1a;
-    --c-warning: #e0a03a;
-    --c-info: #4fb3d4;
-
-    --c-paper: #141f24;
-    --c-foil: #b0a48f;
-    --c-foil-silver: #7d8b93;
-  }
 }
 
 *,
@@ -143,7 +124,6 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* キーボード操作時のみ輪郭を出す */
 :focus-visible {
   outline: 2px solid var(--c-accent);
   outline-offset: 2px;
@@ -160,15 +140,13 @@ body {
 }
 
 /* ==================================================================
- * 部品（05_ui_design_system.md 第6章）
- *
- * 実用の層はミニマル。面の違いは背景色と境界線で示し、影は使わない。
+ * 骨格
  * ================================================================== */
 
 .app-shell {
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
   min-height: 100dvh;
 }
 
@@ -181,7 +159,9 @@ body {
   gap: var(--sp-3);
   min-height: 56px;
   padding: 0 var(--sp-4);
-  background: var(--c-surface);
+  /* 半透明にぼかしを重ね、スクロール中も下の内容がわずかに透ける */
+  background: rgb(255 255 255 / 82%);
+  backdrop-filter: saturate(1.5) blur(12px);
   border-bottom: 1px solid var(--c-border);
 }
 
@@ -189,6 +169,8 @@ body {
   margin: 0;
   font-size: var(--fs-subtitle);
   line-height: var(--lh-tight);
+  font-weight: 700;
+  letter-spacing: 0.01em;
   color: var(--c-text-strong);
 }
 
@@ -200,7 +182,29 @@ body {
   padding: var(--sp-4);
 }
 
-/* --- タブバー --- */
+/* 区画の見出し。左に短いアクセントの罫を添える */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-subtitle);
+  line-height: var(--lh-tight);
+  color: var(--c-text-strong);
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 1em;
+  border-radius: var(--r-full);
+  background: var(--c-accent);
+}
+
+/* ==================================================================
+ * タブバー
+ * ================================================================== */
+
 .tabbar {
   position: fixed;
   inset: auto 0 0 0;
@@ -211,21 +215,24 @@ body {
   max-width: var(--layout-max-width);
   margin: 0 auto;
   padding-bottom: env(safe-area-inset-bottom);
-  height: calc(56px + env(safe-area-inset-bottom));
-  background: var(--c-surface);
+  height: calc(62px + env(safe-area-inset-bottom));
+  background: rgb(255 255 255 / 90%);
+  backdrop-filter: saturate(1.5) blur(14px);
   border-top: 1px solid var(--c-border);
 }
 
 .tabbar a {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   min-height: var(--tap-target-min);
   font-size: var(--fs-caption);
   color: var(--c-text-subtle);
   text-decoration: none;
+  transition: color var(--motion-fast) var(--ease-out);
 }
 
 .tabbar a[aria-current='page'] {
@@ -239,75 +246,118 @@ body {
   line-height: 1;
 }
 
-/* 中央のスキャンは常に強調する（決定18） */
+/* 中央のスキャンは常に強調する（決定18）。浮かせて主行動だと分かるようにする */
 .tabbar .scan .icon {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
+  margin-top: -20px;
   border-radius: var(--r-full);
-  background: var(--c-accent);
+  background: var(--grad-accent);
   color: var(--c-on-accent);
+  box-shadow: var(--shadow-accent), 0 0 0 4px var(--c-surface);
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+
+.tabbar .scan:active .icon {
+  transform: scale(0.94);
 }
 
 .tabbar .badge-dot {
   position: absolute;
-  transform: translate(14px, -14px);
+  top: 9px;
+  left: calc(50% + 7px);
   width: 8px;
   height: 8px;
   border-radius: var(--r-full);
   background: var(--c-accent);
+  box-shadow: 0 0 0 2px var(--c-surface);
 }
 
-/* --- ボタン --- */
+/* ==================================================================
+ * ボタン
+ * ================================================================== */
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
   min-height: var(--tap-target-min);
-  padding: 0 var(--sp-4);
+  padding: 0 var(--sp-6);
   border: 1px solid transparent;
-  border-radius: var(--r-md);
+  border-radius: var(--r-full);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
   background: none;
-  transition: background var(--motion-fast) var(--ease-out);
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.985);
 }
 
 .btn-primary {
-  background: var(--c-accent);
+  background: var(--grad-accent);
   color: var(--c-on-accent);
+  box-shadow: var(--shadow-accent);
 }
-.btn-primary:hover:not(:disabled) { background: var(--c-accent-hover); }
+.btn-primary:hover:not(:disabled) {
+  background: var(--c-accent-hover);
+}
 
 .btn-secondary {
   border-color: var(--c-accent-border);
+  background: var(--c-surface);
   color: var(--c-accent);
+  box-shadow: var(--shadow-xs);
 }
-.btn-secondary:hover:not(:disabled) { background: var(--c-accent-bg); }
+.btn-secondary:hover:not(:disabled) {
+  background: var(--c-accent-bg);
+}
 
-.btn-ghost { color: var(--c-text-muted); }
-.btn-ghost:hover:not(:disabled) { background: var(--c-surface-sunken); }
+.btn-ghost {
+  color: var(--c-text-muted);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--c-surface-sunken);
+}
 
 /* 赤い塗りは押す前から威圧感を与えるため、境界線と文字色で表す（決定 T-31） */
 .btn-danger {
   border-color: var(--c-danger);
+  background: var(--c-surface);
   color: var(--c-danger);
 }
-.btn-danger:hover:not(:disabled) { background: var(--c-danger-bg); }
+.btn-danger:hover:not(:disabled) {
+  background: var(--c-danger-bg);
+}
 
-.btn-sm { min-height: 36px; font-size: var(--fs-small); padding: 0 var(--sp-3); }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-sm {
+  min-height: 36px;
+  padding: 0 var(--sp-4);
+  font-size: var(--fs-small);
+}
 
-/* --- 認証バッジ。色以外の手がかり（チェックの形）を必ず持たせる --- */
+.btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ==================================================================
+ * 認証バッジ。色以外の手がかり（チェックの形）を必ず持たせる
+ * ================================================================== */
+
 .badge-certified {
   display: inline-grid;
   place-items: center;
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   margin-left: var(--sp-1);
   border-radius: var(--r-full);
   background: var(--c-accent);
@@ -317,25 +367,55 @@ body {
   vertical-align: 1px;
 }
 
-/* --- 連絡カード --- */
+/* ==================================================================
+ * 連絡カード
+ * ================================================================== */
+
 .post {
   padding: var(--sp-4);
   margin-bottom: var(--sp-3);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* グループの頭文字を丸で示す。一覧を目で追うときの手がかりになる */
+.post-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.monogram {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--c-accent-border);
+  border-radius: var(--r-full);
+  background: var(--c-accent-bg);
+  color: var(--c-accent-text);
+  font-size: var(--fs-subtitle);
+  font-weight: 700;
+  line-height: 1;
 }
 
 .post-group {
+  display: block;
   font-size: var(--fs-subtitle);
   font-weight: 700;
+  line-height: var(--lh-tight);
   color: var(--c-text-strong);
   text-decoration: none;
 }
-.post-group:hover { text-decoration: underline; }
+.post-group:hover {
+  text-decoration: underline;
+}
 
 .post-meta {
-  margin-top: var(--sp-1);
+  margin-top: 2px;
   font-size: var(--fs-caption);
   color: var(--c-text-subtle);
 }
@@ -359,39 +439,76 @@ body {
   display: inline-block;
   margin-top: var(--sp-2);
   font-size: var(--fs-small);
+  font-weight: 700;
   color: var(--c-accent);
   text-decoration: none;
 }
-.post-link:hover { text-decoration: underline; }
+.post-link:hover {
+  text-decoration: underline;
+}
 
-/* --- 参加意向（決定36） --- */
+/* 日時の札。カレンダーへ入れられることを示す */
+.event-chip {
+  margin-top: var(--sp-4);
+  padding: var(--sp-3);
+  border: 1px solid var(--c-accent-border);
+  border-radius: var(--r-sm);
+  background: var(--c-accent-bg);
+}
+
+.event-chip .when {
+  font-weight: 700;
+  color: var(--c-accent-text);
+}
+
+.event-chip .note {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-caption);
+  color: var(--c-text-muted);
+}
+
+/* ==================================================================
+ * 参加意向（決定36）
+ * ================================================================== */
+
 .joining {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px dashed var(--c-border);
   font-size: var(--fs-small);
   color: var(--c-text-muted);
 }
 
-.avatars { display: flex; }
+.avatars {
+  display: flex;
+}
 
 .avatar {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   margin-right: -8px;
   border: 2px solid var(--c-surface);
   border-radius: var(--r-full);
-  background: var(--c-accent-bg);
-  color: var(--c-accent-text);
-  font-size: 10px;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+  font-size: 11px;
   font-weight: 700;
+  box-shadow: var(--shadow-xs);
 }
-.avatar:last-child { margin-right: var(--sp-2); }
+.avatar:last-child {
+  margin-right: var(--sp-2);
+}
 
-/* --- リアクション --- */
+/* ==================================================================
+ * リアクション
+ * ================================================================== */
+
 .reactions {
   display: flex;
   gap: var(--sp-2);
@@ -402,17 +519,25 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-2);
-  min-height: 36px;
-  padding: 0 var(--sp-3);
+  min-height: 38px;
+  padding: 0 var(--sp-4);
   border: 1px solid var(--c-border);
   border-radius: var(--r-full);
-  background: none;
+  background: var(--c-surface);
   font: inherit;
   font-size: var(--fs-small);
   color: var(--c-text-muted);
   cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
 }
-.reaction:hover { background: var(--c-surface-sunken); }
+.reaction:hover {
+  background: var(--c-surface-tint);
+}
+.reaction:active {
+  transform: scale(0.97);
+}
 .reaction[aria-pressed='true'] {
   border-color: var(--c-accent-border);
   background: var(--c-accent-bg);
@@ -420,15 +545,23 @@ body {
   font-weight: 700;
 }
 
-/* --- 一覧・カード --- */
+/* ==================================================================
+ * 一覧
+ * ================================================================== */
+
 .card {
   padding: var(--sp-4);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   background: var(--c-surface);
+  box-shadow: var(--shadow-sm);
 }
 
-.list { display: flex; flex-direction: column; gap: var(--sp-3); }
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
 
 .row {
   display: block;
@@ -436,24 +569,52 @@ body {
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   background: var(--c-surface);
+  box-shadow: var(--shadow-xs);
   color: inherit;
   text-decoration: none;
+  transition:
+    box-shadow var(--motion-fast) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
 }
-.row:hover { border-color: var(--c-border-strong); }
+.row:hover {
+  box-shadow: var(--shadow-sm);
+}
+.row:active {
+  transform: scale(0.995);
+}
 
-.row-title { font-weight: 700; color: var(--c-text-strong); }
-.row-meta { margin-top: var(--sp-1); font-size: var(--fs-small); color: var(--c-text-subtle); }
+.row-title {
+  font-weight: 700;
+  color: var(--c-text-strong);
+}
 
-/* --- 空状態。画面ごとに固有の文言を置く --- */
+.row-meta {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-small);
+  color: var(--c-text-subtle);
+}
+
+/* ==================================================================
+ * 空状態。画面ごとに固有の文言を置く
+ * ================================================================== */
+
 .empty {
   padding: var(--sp-12) var(--sp-4);
   text-align: center;
   color: var(--c-text-muted);
 }
-.empty p { margin: 0 0 var(--sp-4); }
+.empty p {
+  margin: 0 0 var(--sp-4);
+}
 
-/* --- 入力 --- */
-.field { display: block; margin-bottom: var(--sp-4); }
+/* ==================================================================
+ * 入力
+ * ================================================================== */
+
+.field {
+  display: block;
+  margin-bottom: var(--sp-6);
+}
 
 .field > .label {
   display: block;
@@ -470,33 +631,57 @@ body {
   width: 100%;
   min-height: var(--tap-target-min);
   padding: var(--sp-3);
-  border: 1px solid transparent;
+  border: 1px solid var(--c-border);
   border-radius: var(--r-sm);
-  background: var(--c-surface-sunken);
+  background: var(--c-surface);
   color: var(--c-text);
   font: inherit;
+  box-shadow: inset 0 1px 2px rgb(4 56 76 / 4%);
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
 }
-.textarea { min-height: 140px; resize: vertical; line-height: var(--lh-body); }
-.input:focus, .textarea:focus, .select:focus {
+.textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: var(--lh-body);
+}
+.input:focus,
+.textarea:focus,
+.select:focus {
   outline: none;
   border-color: var(--c-accent);
-  background: var(--c-surface);
+  box-shadow: 0 0 0 3px var(--c-accent-bg);
 }
 
-.hint { margin-top: var(--sp-2); font-size: var(--fs-small); color: var(--c-text-subtle); }
-.hint-error { color: var(--c-danger); }
+.hint {
+  display: block;
+  margin-top: var(--sp-2);
+  font-size: var(--fs-small);
+  color: var(--c-text-subtle);
+}
+.hint-error {
+  color: var(--c-danger);
+}
 
 /* 配信範囲の選択。対象人数を常に見せる（決定 T-48） */
 .scope-option {
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-3);
+  padding: var(--sp-4);
   border: 1px solid var(--c-border);
   border-radius: var(--r-md);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    background var(--motion-fast) var(--ease-out);
 }
-.scope-option + .scope-option { margin-top: var(--sp-2); }
+.scope-option + .scope-option {
+  margin-top: var(--sp-2);
+}
 .scope-option:has(input:checked) {
   border-color: var(--c-accent);
   background: var(--c-accent-bg);
@@ -510,7 +695,9 @@ body {
 }
 
 /* ==================================================================
- * コレクション（愛着の層）。この領域だけ紙の地と箔押し風の縁を使う
+ * コレクション（愛着の層）
+ *
+ * この領域だけ紙の地と箔押し風の縁を使う。
  * ================================================================== */
 
 .collection {
@@ -519,6 +706,7 @@ body {
   background-color: var(--c-paper);
   background-image: radial-gradient(rgb(4 56 76 / 4%) 0.5px, transparent 0.5px);
   background-size: 5px 5px;
+  border-top: 1px solid var(--c-border);
   min-height: 60vh;
 }
 
@@ -530,7 +718,7 @@ body {
 
 /*
  * 箔押しの見立て：縁は箔の色で統一し、地はスタンプごとの色をごく淡く敷く。
- * 縁にスタンプごとの色を使うと、並べたときに統一感が失われる（第7.2節）。
+ * 内側に細い白のリングを重ねて、押し込まれた厚みを出す。
  */
 .stamp {
   --stamp-color: var(--c-foil);
@@ -540,20 +728,28 @@ body {
   border: 1.5px solid var(--c-foil);
   border-radius: var(--r-full);
   background: color-mix(in srgb, var(--stamp-color) 22%, var(--c-surface));
-  box-shadow: var(--shadow-stamp);
-  font-size: 28px;
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 75%),
+    var(--shadow-sm);
+  font-size: 30px;
+}
+.stamp.hexagon {
+  border-radius: 22%;
+}
+.stamp.shield {
+  border-radius: 46% 46% 34% 34% / 34% 34% 46% 46%;
 }
 
 @supports not (background: color-mix(in srgb, red 10%, white)) {
-  .stamp { background: var(--c-surface); }
+  .stamp {
+    background: var(--c-surface);
+  }
 }
-.stamp.hexagon { border-radius: 18%; }
-.stamp.shield { border-radius: 46% 46% 30% 30%; }
 
 .stamp-caption {
   margin-top: var(--sp-2);
   font-size: var(--fs-caption);
-  line-height: 1.4;
+  line-height: 1.45;
   text-align: center;
   color: var(--c-text-muted);
 }
@@ -563,7 +759,7 @@ body {
   aspect-ratio: 1;
   border: 1.5px dashed var(--c-border-strong);
   border-radius: var(--r-full);
-  opacity: 0.6;
+  opacity: 0.55;
 }
 
 .card-grid {
@@ -577,21 +773,33 @@ body {
   flex-direction: column;
   aspect-ratio: 63 / 88;
   padding: var(--sp-3);
+  border: 1px solid var(--c-border);
   border-radius: var(--r-md);
   background: var(--c-surface);
-  box-shadow: var(--shadow-card);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 90%),
+    var(--shadow-md);
   box-sizing: border-box;
 }
 
 .trading-card .band {
-  height: 6px;
+  height: 8px;
   margin: calc(var(--sp-3) * -1) calc(var(--sp-3) * -1) var(--sp-3);
   border-radius: var(--r-md) var(--r-md) 0 0;
-  background: var(--c-accent);
+  background: var(--grad-accent);
 }
 
-.trading-card .name { font-weight: 700; color: var(--c-text-strong); }
-.trading-card .affiliation { margin-top: var(--sp-1); font-size: var(--fs-caption); color: var(--c-accent-text); }
+.trading-card .name {
+  font-weight: 700;
+  color: var(--c-text-strong);
+}
+
+.trading-card .affiliation {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-caption);
+  color: var(--c-accent-text);
+}
+
 .trading-card .bio {
   margin-top: var(--sp-2);
   font-size: var(--fs-caption);
@@ -608,16 +816,18 @@ body {
   background: var(--c-surface-sunken);
 }
 .segmented a {
-  padding: var(--sp-2) var(--sp-4);
+  padding: var(--sp-2) var(--sp-6);
   border-radius: var(--r-full);
   font-size: var(--fs-small);
   color: var(--c-text-muted);
   text-decoration: none;
+  transition: background var(--motion-fast) var(--ease-out);
 }
 .segmented a[aria-current='page'] {
   background: var(--c-surface);
   color: var(--c-text-strong);
   font-weight: 700;
+  box-shadow: var(--shadow-xs);
 }
 
 /* ==================================================================
@@ -634,14 +844,19 @@ body {
   color: #fff;
   font-size: var(--fs-caption);
 }
-.devbar strong { font-weight: 700; }
+.devbar strong {
+  font-weight: 700;
+}
+
 .devbar form {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
 }
 
-.devbar-form { margin-left: auto; }
+.devbar-form {
+  margin-left: auto;
+}
 
 .devbar select,
 .devbar button {
@@ -653,8 +868,12 @@ body {
   font: inherit;
   cursor: pointer;
 }
-.devbar button:hover { background: rgb(255 255 255 / 20%); }
-.devbar select option { color: #111; }
+.devbar button:hover {
+  background: rgb(255 255 255 / 20%);
+}
+.devbar select option {
+  color: #111;
+}
 
 .notice {
   padding: var(--sp-3) var(--sp-4);

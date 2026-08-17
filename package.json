@@ -19,7 +19,8 @@
     "verify": "npm run lint && npm run typecheck && npm run test",
     "db:seed": "tsx --conditions=react-server scripts/seed.ts",
     "db:reset": "rm -rf .data && npm run db:seed",
-    "screenshot": "tsx --conditions=react-server scripts/screenshot.ts"
+    "screenshot": "tsx --conditions=react-server scripts/screenshot.ts",
+    "theme:check": "tsx --conditions=react-server scripts/theme-check.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

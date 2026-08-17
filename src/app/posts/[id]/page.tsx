@@ -31,8 +31,8 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         <PostCard item={post} detail />
 
         <section style={{ marginTop: 'var(--sp-8)' }}>
-          <h2 style={{ fontSize: 'var(--fs-subtitle)', margin: '0 0 var(--sp-4)' }}>
-            コメント<span className="tabular"> {post.comments.length}</span>
+          <h2 className="section-title">
+            コメント<span className="tabular">{post.comments.length}</span>
           </h2>
 
           {post.comments.length === 0 ? (

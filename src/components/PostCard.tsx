@@ -7,7 +7,8 @@ import type { TimelineItem } from '@/server/queries';
 /**
  * 連絡カード（デザインシステム 第4.3節）
  *
- * 区切りは線ではなく余白を主とし、カードを重ねて影を落とす表現は用いない。
+ * グループの頭文字を丸で示す。一覧を目で追うときの手がかりになり、
+ * どのグループからの連絡かが文字を読む前に分かる（決定 T-81）。
  */
 export function PostCard({ item, detail = false }: { item: TimelineItem; detail?: boolean }) {
   const shownNames = item.joiningNames.slice(0, 4);
@@ -15,13 +16,20 @@ export function PostCard({ item, detail = false }: { item: TimelineItem; detail?
 
   return (
     <article className="post">
-      <Link href={`/groups/${item.groupId}`} className="post-group">
-        {item.groupName}
-        <CertifiedBadge certified={item.isCertified} />
-      </Link>
-      <div className="post-meta">
-        {formatDateTime(item.createdAt)}
-        {item.editedAt ? '・編集済み' : ''}
+      <div className="post-head">
+        <span className="monogram" aria-hidden="true">
+          {initials(item.groupName)}
+        </span>
+        <div>
+          <Link href={`/groups/${item.groupId}`} className="post-group">
+            {item.groupName}
+            <CertifiedBadge certified={item.isCertified} />
+          </Link>
+          <div className="post-meta">
+            {formatDateTime(item.createdAt)}
+            {item.editedAt ? '・編集済み' : ''}
+          </div>
+        </div>
       </div>
 
       <p className={detail ? 'post-body' : 'post-body clamped'}>{item.body}</p>
@@ -33,9 +41,11 @@ export function PostCard({ item, detail = false }: { item: TimelineItem; detail?
       ) : null}
 
       {item.eventAt ? (
-        <div className="card" style={{ marginTop: 'var(--sp-4)' }}>
-          <div style={{ fontWeight: 700 }}>{formatEvent(item.eventAt)}</div>
-          <div className="hint">カレンダーに追加すると、通知が届かない端末でも予定を確認できます。</div>
+        <div className="event-chip">
+          <span className="when">{formatEvent(item.eventAt)}</span>
+          <span className="note">
+            カレンダーに追加すると、通知が届かない端末でも予定を確認できます。
+          </span>
         </div>
       ) : null}
 

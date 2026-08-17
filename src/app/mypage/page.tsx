@@ -50,7 +50,7 @@ export default async function MyPage() {
 
         <section style={{ marginTop: 'var(--sp-8)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-            <h2 style={{ fontSize: 'var(--fs-subtitle)', margin: 0 }}>所属グループ</h2>
+            <h2 className="section-title" style={{ marginBottom: 0 }}>所属グループ</h2>
             <span style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--sp-2)' }}>
               <Link href="/groups" className="btn btn-ghost btn-sm">
                 探す

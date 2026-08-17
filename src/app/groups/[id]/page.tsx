@@ -65,8 +65,8 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
 
         {isAdmin && group.pendingRequests.length > 0 ? (
           <section style={{ marginTop: 'var(--sp-8)' }}>
-            <h3 style={{ fontSize: 'var(--fs-subtitle)', margin: '0 0 var(--sp-3)' }}>
-              参加申請<span className="tabular"> {group.pendingRequests.length}</span>
+            <h3 className="section-title">
+              参加申請<span className="tabular">{group.pendingRequests.length}</span>
             </h3>
             <div className="list">
               {group.pendingRequests.map((request) => (
@@ -92,9 +92,7 @@ export default async function GroupPage({ params }: { params: Promise<{ id: stri
 
         {isAdmin && group.descendants.length > 0 ? (
           <section style={{ marginTop: 'var(--sp-8)' }}>
-            <h3 style={{ fontSize: 'var(--fs-subtitle)', margin: '0 0 var(--sp-3)' }}>
-              配下のグループ
-            </h3>
+            <h3 className="section-title">配下のグループ</h3>
             <p className="hint" style={{ marginTop: 0 }}>
               承認は直上の親子関係についてのみ行われるため、孫以降もここで確認できます。
             </p>
