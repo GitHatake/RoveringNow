@@ -176,8 +176,8 @@ flowchart TB
     API -->|VAPID| Push
     Push -->|プッシュ| SW
 
-    style Policy fill:#04384c,color:#fff
-    style PG fill:#0f6b8a,color:#fff
+    style Policy fill:#2b1613,color:#fff
+    style PG fill:#c01505,color:#fff
 ```
 
 ### 3.2 各層の責務

@@ -26,6 +26,8 @@ const SHOTS: Shot[] = [
   { name: '06-groups', path: '/groups', user: 'member' },
   { name: '07-group-new', path: '/groups/new', user: 'member' },
   { name: '08-mypage', path: '/mypage', user: 'member' },
+  // ボタンの序列（主要／副次／破壊的）が同時に並ぶ画面
+  { name: '10-group-detail', path: '', user: 'member' },
   { name: '09-timeline-dark', path: '/', user: 'member', dark: true },
 ];
 
@@ -73,6 +75,7 @@ async function shoot(shot: Shot): Promise<void> {
   await context.close();
 }
 
+// グループ詳細のパスも、タイムラインの1件目のグループから取得する
 // 連絡詳細のパスは、タイムラインの1件目から取得する
 const linkContext = await browser.newContext();
 await linkContext.addCookies([
@@ -81,11 +84,17 @@ await linkContext.addCookies([
 const linkPage = await linkContext.newPage();
 await linkPage.goto(BASE, { waitUntil: 'networkidle' });
 const postHref = await linkPage.$eval('a.post-link', (a) => (a as HTMLAnchorElement).pathname);
+const groupHref = await linkPage.$eval('a.post-group', (a) => (a as HTMLAnchorElement).pathname);
 await linkContext.close();
 
 console.log('撮影:');
+const resolved: Record<string, string> = {
+  '02-post-detail': postHref,
+  '10-group-detail': groupHref,
+};
 for (const shot of SHOTS) {
-  await shoot(shot.name === '02-post-detail' ? { ...shot, path: postHref } : shot);
+  const path = resolved[shot.name];
+  await shoot(path ? { ...shot, path } : shot);
 }
 
 /* ------------------------------------------------------------------ *

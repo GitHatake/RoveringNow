@@ -1025,11 +1025,11 @@ flowchart TD
     B --> P["すみだ地区キャンプ実行委員会<br/>種別：プロジェクト（期限あり）"]
     X["夏季合同キャンプ2027<br/>種別：イベント・親なし"]
 
-    style A fill:#04384c,color:#fff
-    style B fill:#0f6b8a,color:#fff
-    style C fill:#0f6b8a,color:#fff
-    style P fill:#9b8d77,color:#fff
-    style X fill:#9b8d77,color:#fff
+    style A fill:#2b1613,color:#fff
+    style B fill:#c01505,color:#fff
+    style C fill:#c01505,color:#fff
+    style P fill:#8e7f6a,color:#fff
+    style X fill:#8e7f6a,color:#fff
 ```
 
 配信対象の決定規則は次のとおり。

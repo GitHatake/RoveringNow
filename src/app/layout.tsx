@@ -19,7 +19,7 @@ export const viewport: Viewport = {
   // 端末の文字サイズ設定に追随させるため、拡大を禁じない
   maximumScale: 5,
   // テーマは白ベースに固定するため、端末設定で切り替えない（決定 T-79）
-  themeColor: '#f7f9fa',
+  themeColor: '#faf8f7',
   colorScheme: 'light',
 };
 

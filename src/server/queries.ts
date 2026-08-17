@@ -2,9 +2,17 @@
  * 画面表示のための読み取り
  *
  * Server Components から呼ぶ。更新は Server Actions（src/server/actions）が担う。
+ *
+ * **相関サブクエリの中で Drizzle の列オブジェクトを補間しないこと。**
+ * `${'${schema.groups.id}'}` は、外側のクエリに JOIN が無い場合にテーブル修飾なしの
+ * `"id"` として出力される。サブクエリ側のテーブルに同名の列があると、そちらに
+ * 静かに束縛されて条件が常に偽になる（実際に人数・親グループ名が 0／null になる
+ * 不具合を起こした）。JOIN の有無で挙動が変わるため気づきにくい。
+ *
+ * そのため、集計や関連の取得は **明示的な JOIN を書いた生 SQL** で行う。
  */
-import { and, asc, desc, eq, ilike, or, sql } from 'drizzle-orm';
-import { getDb, schema } from '@/db';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { getDb, schema, type Db } from '@/db';
 import type { GroupKind, GroupStatus, JoinPolicy, ReactionKind } from '@/db/schema';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -189,32 +197,41 @@ export type GroupSummary = {
 };
 
 /** グループ検索（S-07）。認証バッジ付きを上位に表示する */
-export async function searchGroups(query: string): Promise<GroupSummary[]> {
-  const db = await getDb();
+export async function searchGroups(query: string, database?: Db): Promise<GroupSummary[]> {
+  const db = database ?? (await getDb());
   const trimmed = query.trim();
+  const pattern = `%${trimmed}%`;
 
-  const rows = await db
-    .select({
-      id: schema.groups.id,
-      name: schema.groups.name,
-      kind: schema.groups.kind,
-      status: schema.groups.status,
-      joinPolicy: schema.groups.joinPolicy,
-      isCertified: schema.groups.isCertified,
-      parentName: sql<string | null>`(select name from groups p where p.id = ${schema.groups.parentGroupId})`,
-      memberCount: sql<number>`(select count(*)::int from memberships m
-                                 where m.group_id = ${schema.groups.id} and m.status = 'active')`,
-    })
-    .from(schema.groups)
-    .where(
-      trimmed.length > 0
-        ? or(ilike(schema.groups.name, `%${trimmed}%`), ilike(schema.groups.description, `%${trimmed}%`))
-        : undefined,
-    )
-    .orderBy(desc(schema.groups.isCertified), asc(schema.groups.name))
-    .limit(50);
+  const result = await db.execute(sql`
+    select g.id             as "id",
+           g.name           as "name",
+           g.kind           as "kind",
+           g.status         as "status",
+           g.join_policy    as "joinPolicy",
+           g.is_certified   as "isCertified",
+           p.name           as "parentName",
+           coalesce(mc.count, 0) as "memberCount"
+      from groups g
+      left join groups p on p.id = g.parent_group_id
+      left join (
+        select m.group_id, count(*)::int as count
+          from memberships m
+         where m.status = 'active'
+         group by m.group_id
+      ) mc on mc.group_id = g.id
+     ${
+       trimmed.length > 0
+         ? sql`where g.name ilike ${pattern} or g.description ilike ${pattern}`
+         : sql``
+     }
+     order by g.is_certified desc, g.name asc
+     limit 50
+  `);
 
-  return rows;
+  return rowsOf<GroupSummary>(result).map((row) => ({
+    ...row,
+    memberCount: Number(row.memberCount),
+  }));
 }
 
 export type GroupDetail = GroupSummary & {
@@ -228,30 +245,51 @@ export type GroupDetail = GroupSummary & {
   descendants: Array<{ groupId: string; name: string; depth: number; severed: boolean; memberCount: number }>;
 };
 
-export async function getGroupDetail(groupId: string, userId: string): Promise<GroupDetail | null> {
-  const db = await getDb();
+export async function getGroupDetail(
+  groupId: string,
+  userId: string,
+  database?: Db,
+): Promise<GroupDetail | null> {
+  const db = database ?? (await getDb());
 
-  const base = await db
-    .select({
-      id: schema.groups.id,
-      name: schema.groups.name,
-      kind: schema.groups.kind,
-      status: schema.groups.status,
-      joinPolicy: schema.groups.joinPolicy,
-      isCertified: schema.groups.isCertified,
-      description: schema.groups.description,
-      expiresAt: schema.groups.expiresAt,
-      ownerUserId: schema.groups.ownerUserId,
-      parentName: sql<string | null>`(select name from groups p where p.id = ${schema.groups.parentGroupId})`,
-      memberCount: sql<number>`(select count(*)::int from memberships m
-                                 where m.group_id = ${schema.groups.id} and m.status = 'active')`,
-    })
-    .from(schema.groups)
-    .where(eq(schema.groups.id, groupId))
-    .limit(1);
+  const baseResult = await db.execute(sql`
+    select g.id           as "id",
+           g.name         as "name",
+           g.kind         as "kind",
+           g.status       as "status",
+           g.join_policy  as "joinPolicy",
+           g.is_certified as "isCertified",
+           g.description  as "description",
+           g.expires_at   as "expiresAt",
+           g.owner_user_id as "ownerUserId",
+           p.name         as "parentName",
+           coalesce(mc.count, 0) as "memberCount"
+      from groups g
+      left join groups p on p.id = g.parent_group_id
+      left join (
+        select m.group_id, count(*)::int as count
+          from memberships m
+         where m.status = 'active'
+         group by m.group_id
+      ) mc on mc.group_id = g.id
+     where g.id = ${groupId}
+  `);
 
-  const group = base[0];
-  if (!group) return null;
+  const raw = rowsOf<
+    Omit<GroupSummary, 'memberCount'> & {
+      description: string | null;
+      expiresAt: string | null;
+      ownerUserId: string;
+      memberCount: number | string;
+    }
+  >(baseResult)[0];
+  if (!raw) return null;
+
+  const group = {
+    ...raw,
+    expiresAt: raw.expiresAt ? new Date(raw.expiresAt) : null,
+    memberCount: Number(raw.memberCount),
+  };
 
   const membership = await db
     .select({ status: schema.memberships.status, role: schema.memberships.role })
@@ -315,27 +353,25 @@ export async function getGroupDetail(groupId: string, userId: string): Promise<G
 }
 
 /** 連絡を投稿できるグループ（S-06 の送信元） */
-export async function listAdminGroups(userId: string) {
-  const db = await getDb();
-  return db
-    .select({
-      id: schema.groups.id,
-      name: schema.groups.name,
-      isCertified: schema.groups.isCertified,
-      hasChildren: sql<boolean>`exists (select 1 from groups c where c.parent_group_id = ${schema.groups.id}
-                                          and c.status = 'active')`,
-    })
-    .from(schema.groups)
-    .innerJoin(schema.memberships, eq(schema.memberships.groupId, schema.groups.id))
-    .where(
-      and(
-        eq(schema.memberships.userId, userId),
-        eq(schema.memberships.status, 'active'),
-        eq(schema.memberships.role, 'admin'),
-        eq(schema.groups.status, 'active'),
-      ),
-    )
-    .orderBy(asc(schema.groups.name));
+export async function listAdminGroups(userId: string, database?: Db) {
+  const db = database ?? (await getDb());
+  const result = await db.execute(sql`
+    select g.id           as "id",
+           g.name         as "name",
+           g.is_certified as "isCertified",
+           exists (
+             select 1 from groups c
+              where c.parent_group_id = g.id and c.status = 'active'
+           ) as "hasChildren"
+      from groups g
+      join memberships m on m.group_id = g.id
+     where m.user_id = ${userId}
+       and m.status = 'active'
+       and m.role = 'admin'
+       and g.status = 'active'
+     order by g.name asc
+  `);
+  return rowsOf<{ id: string; name: string; isCertified: boolean; hasChildren: boolean }>(result);
 }
 
 export async function listMyGroups(userId: string) {
