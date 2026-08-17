@@ -550,15 +550,15 @@ SELECT p.*, pa.source_group_id
 ```sql
 BEGIN;
 
--- 対象グループの管理者行をロックしたうえで数える
-SELECT count(*)
+-- 対象グループの管理者行をロックして取得する
+SELECT user_id
   FROM memberships
  WHERE group_id = :group_id
    AND role = 'admin'
    AND status = 'active'
    FOR UPDATE;
 
--- 結果が 1 以下なら中止（自分しかいない）
+-- 取得できた行が 1 件以下なら中止（自分しかいない）
 
 UPDATE memberships
    SET role = 'member'
@@ -567,7 +567,14 @@ UPDATE memberships
 COMMIT;
 ```
 
+> **`count(*)` と `FOR UPDATE` は併用できない。** PostgreSQL は
+> 「FOR UPDATE is not allowed with aggregate functions」として拒否する。
+> 行を取得してロックし、**件数はアプリケーション側で数える**。
+> （本書 v1.0 では集約と併用する SQL を記載していたが、実行できないため改めた）
+
 **`FOR UPDATE` がないと、2人の管理者が同時に辞任したときに両方が成功する。** それぞれが「自分以外にもう1人いる」と判定するためである。行ロックにより、後から来た側は先の処理の完了を待ち、更新後の状態を見る。
+
+ロックがかかるのは既存の管理者行である。新たな管理者が同時に追加されること（ファントム）は防げないが、それは件数を増やす方向であり、守りたい不変条件（管理者を0人にしない）は破られない。
 
 同じ配慮を、脱退・権限剥奪・オーナー移譲にも適用する。
 

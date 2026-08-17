@@ -297,13 +297,16 @@ sequenceDiagram
 
 ```
 BEGIN
-  SELECT ... FROM memberships
+  SELECT user_id FROM memberships
    WHERE group_id = ? AND role = '管理者' AND status = '承認済'
-   FOR UPDATE                      ← 行ロック
-  管理者が自分1人だけなら中止
+   FOR UPDATE                      ← 行をロックして取得する
+  取得できた行が1件以下なら中止（自分しかいない）
   自分のロールを変更／脱退を記録
 COMMIT
 ```
+
+**件数の数え方に注意がいる。** `count(*)` と `FOR UPDATE` は併用できないため
+（PostgreSQL が拒否する）、行を取得してロックし、件数はアプリケーション側で数える。
 
 同じ配慮は次の操作にも必要である。
 

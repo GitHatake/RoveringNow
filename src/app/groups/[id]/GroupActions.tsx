@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { approveJoinRequest, joinGroup, leaveGroup, toggleMute } from '@/server/actions/groups';
+import { approveJoinRequest, joinGroup, toggleMute } from '@/server/actions/groups';
+import { leaveGroup } from '@/server/actions/memberships';
 import { ERROR_MESSAGES } from '@/lib/result';
 import type { JoinPolicy } from '@/db/schema';
 

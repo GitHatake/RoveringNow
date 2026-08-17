@@ -264,3 +264,150 @@ export async function createComment(postId: string, rawBody: string): Promise<Re
   revalidatePath(`/posts/${postId}`);
   return ok({ commentId: comment.id });
 }
+
+/* ------------------------------------------------------------------ *
+ * F-07 連絡の編集・削除
+ *
+ * 訂正手段がなければ、誤った集合時刻が全配下のタイムラインに正として
+ * 残り続ける。新規投稿による訂正では、元を見た人が訂正を見るとは限らない。
+ * ------------------------------------------------------------------ */
+
+/** 投稿と、その投稿者・グループを取得する */
+async function loadPostForEdit(db: Awaited<ReturnType<typeof getDb>>, postId: string) {
+  const rows = await db
+    .select({
+      groupId: schema.posts.groupId,
+      authorUserId: schema.posts.authorUserId,
+      status: schema.posts.status,
+    })
+    .from(schema.posts)
+    .where(eq(schema.posts.id, postId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function updatePost(postId: string, rawBody: string): Promise<Result<null>> {
+  const actor = await getActor();
+  if (!actor) return fail('UNAUTHENTICATED', 'ログインが必要です。');
+
+  const body = rawBody.trim();
+  if (body.length === 0 || body.length > BODY_MAX_LENGTH) {
+    return fail('VALIDATION_FAILED', `本文は1〜${BODY_MAX_LENGTH}文字で入力してください。`);
+  }
+
+  const db = await getDb();
+  const post = await loadPostForEdit(db, postId);
+  if (!post || post.status !== 'published') return fail('NOT_FOUND', '対象が見つかりませんでした。');
+
+  const group = await loadGroup(db, post.groupId, actor.userId);
+  if (!group) return fail('NOT_FOUND', '対象が見つかりませんでした。');
+  if (!can(actor, { action: 'post.modify', group: group.context, post })) {
+    return fail('FORBIDDEN', '自分が投稿した連絡だけを編集できます。');
+  }
+
+  await db
+    .update(schema.posts)
+    .set({ body, editedAt: new Date() })
+    .where(eq(schema.posts.id, postId));
+
+  revalidatePath(`/posts/${postId}`);
+  revalidatePath('/');
+  return ok(null);
+}
+
+export async function deletePost(postId: string): Promise<Result<null>> {
+  const actor = await getActor();
+  if (!actor) return fail('UNAUTHENTICATED', 'ログインが必要です。');
+
+  const db = await getDb();
+  const post = await loadPostForEdit(db, postId);
+  if (!post || post.status !== 'published') return fail('NOT_FOUND', '対象が見つかりませんでした。');
+
+  const group = await loadGroup(db, post.groupId, actor.userId);
+  if (!group) return fail('NOT_FOUND', '対象が見つかりませんでした。');
+  if (!can(actor, { action: 'post.modify', group: group.context, post })) {
+    return fail('FORBIDDEN', '自分が投稿した連絡だけを削除できます。');
+  }
+
+  // 物理削除しない（決定 T-16）。配信対象と通知の記録は残す
+  await db
+    .update(schema.posts)
+    .set({ status: 'deleted', deletedAt: new Date() })
+    .where(eq(schema.posts.id, postId));
+
+  revalidatePath('/');
+  revalidatePath(`/groups/${post.groupId}`);
+  return ok(null);
+}
+
+/* ------------------------------------------------------------------ *
+ * F-09 コメントの編集・削除
+ * ------------------------------------------------------------------ */
+
+async function loadCommentForEdit(db: Awaited<ReturnType<typeof getDb>>, commentId: string) {
+  const rows = await db
+    .select({
+      postId: schema.comments.postId,
+      authorUserId: schema.comments.authorUserId,
+      status: schema.comments.status,
+      groupId: schema.posts.groupId,
+    })
+    .from(schema.comments)
+    .innerJoin(schema.posts, eq(schema.posts.id, schema.comments.postId))
+    .where(eq(schema.comments.id, commentId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function updateComment(commentId: string, rawBody: string): Promise<Result<null>> {
+  const actor = await getActor();
+  if (!actor) return fail('UNAUTHENTICATED', 'ログインが必要です。');
+
+  const body = rawBody.trim();
+  if (body.length === 0 || body.length > BODY_MAX_LENGTH) {
+    return fail('VALIDATION_FAILED', `本文は1〜${BODY_MAX_LENGTH}文字で入力してください。`);
+  }
+
+  const db = await getDb();
+  const comment = await loadCommentForEdit(db, commentId);
+  if (!comment || comment.status !== 'published') {
+    return fail('NOT_FOUND', '対象が見つかりませんでした。');
+  }
+
+  const group = await loadGroup(db, comment.groupId, actor.userId);
+  if (!group || !can(actor, { action: 'comment.modify', group: group.context, comment })) {
+    return fail('FORBIDDEN', '自分が書いたコメントだけを編集できます。');
+  }
+
+  await db
+    .update(schema.comments)
+    .set({ body, editedAt: new Date() })
+    .where(eq(schema.comments.id, commentId));
+
+  revalidatePath(`/posts/${comment.postId}`);
+  return ok(null);
+}
+
+export async function deleteComment(commentId: string): Promise<Result<null>> {
+  const actor = await getActor();
+  if (!actor) return fail('UNAUTHENTICATED', 'ログインが必要です。');
+
+  const db = await getDb();
+  const comment = await loadCommentForEdit(db, commentId);
+  if (!comment || comment.status !== 'published') {
+    return fail('NOT_FOUND', '対象が見つかりませんでした。');
+  }
+
+  const group = await loadGroup(db, comment.groupId, actor.userId);
+  if (!group || !can(actor, { action: 'comment.modify', group: group.context, comment })) {
+    return fail('FORBIDDEN', '自分が書いたコメントだけを削除できます。');
+  }
+
+  await db
+    .update(schema.comments)
+    .set({ status: 'deleted', deletedAt: new Date() })
+    .where(eq(schema.comments.id, commentId));
+
+  revalidatePath(`/posts/${comment.postId}`);
+  return ok(null);
+}

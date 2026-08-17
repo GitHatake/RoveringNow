@@ -3,7 +3,7 @@
 /**
  * グループに関する操作（04_api_spec.md 第4.2節）
  */
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { getDb, schema } from '@/db';
 import { can } from '@/domain/authorization';
@@ -177,66 +177,6 @@ export async function joinGroup(groupId: string): Promise<Result<{ status: 'acti
   revalidatePath(`/groups/${groupId}`);
   revalidatePath('/');
   return ok({ status: nextStatus });
-}
-
-/**
- * グループから脱退する。
- *
- * 唯一の管理者は後任を指名するまで脱退できない（決定34）。
- * 同時辞任により管理者が 0 人になる競合を防ぐため、管理者行をロックしてから数える
- * （03_db_schema.md 第5.3節）。
- */
-export async function leaveGroup(groupId: string): Promise<Result<null>> {
-  const actor = await getActor();
-  if (!actor) return fail('UNAUTHENTICATED', 'ログインが必要です。');
-
-  const db = await getDb();
-  const group = await loadGroup(db, groupId, actor.userId);
-  if (!group) return fail('NOT_FOUND', '対象が見つかりませんでした。');
-
-  if (!can(actor, { action: 'group.leave', group: group.context })) {
-    // オーナーはここに来る。移譲を促す（決定45）
-    if (group.context.ownerUserId === actor.userId) {
-      return fail(
-        'FORBIDDEN',
-        'オーナーは脱退できません。先に別の管理者へオーナーを移譲してください。',
-      );
-    }
-    return fail('FORBIDDEN', 'この操作を行う権限がありません。');
-  }
-
-  const result = await db.transaction(async (tx): Promise<Result<null>> => {
-    if (group.context.membership?.role === 'admin') {
-      const admins = await tx.execute(sql`
-        select count(*)::int as count
-          from memberships
-         where group_id = ${groupId}
-           and role = 'admin'
-           and status = 'active'
-           for update
-      `);
-      const rows = Array.isArray(admins)
-        ? (admins as Array<{ count: number }>)
-        : (admins as { rows: Array<{ count: number }> }).rows;
-      if ((rows[0]?.count ?? 0) <= 1) {
-        return fail('LAST_ADMIN', 'あなたはこのグループの唯一の管理者です。先に後任を決めてください。');
-      }
-    }
-
-    await tx
-      .update(schema.memberships)
-      .set({ status: 'left', role: 'member', leftAt: new Date() })
-      .where(
-        and(eq(schema.memberships.groupId, groupId), eq(schema.memberships.userId, actor.userId)),
-      );
-    return ok(null);
-  });
-
-  if (result.ok) {
-    revalidatePath(`/groups/${groupId}`);
-    revalidatePath('/');
-  }
-  return result;
 }
 
 export async function approveJoinRequest(groupId: string, targetUserId: string): Promise<Result<null>> {
