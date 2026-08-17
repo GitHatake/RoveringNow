@@ -616,14 +616,25 @@ body {
   font-size: var(--fs-caption);
 }
 .devbar strong { font-weight: 700; }
-.devbar select {
+.devbar form {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.devbar-form { margin-left: auto; }
+
+.devbar select,
+.devbar button {
   padding: 4px var(--sp-2);
   border: 1px solid rgb(255 255 255 / 40%);
   border-radius: var(--r-sm);
   background: rgb(255 255 255 / 10%);
   color: #fff;
   font: inherit;
+  cursor: pointer;
 }
+.devbar button:hover { background: rgb(255 255 255 / 20%); }
 .devbar select option { color: #111; }
 
 .notice {
