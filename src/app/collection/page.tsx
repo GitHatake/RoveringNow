@@ -51,7 +51,12 @@ export default async function CollectionPage({
                     <div key={stamp.id}>
                       <div
                         className={`stamp ${design.shape ?? 'circle'}`}
-                        style={design.color ? { borderColor: design.color } : undefined}
+                        // 縁は箔の色で統一する。スタンプごとの色は地に淡く敷く（第7.2節）
+                        style={
+                          design.color
+                            ? ({ '--stamp-color': design.color } as React.CSSProperties)
+                            : undefined
+                        }
                         role="img"
                         aria-label={`${stamp.name}（${formatDate(stamp.activityDate)}）`}
                       >

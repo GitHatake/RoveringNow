@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
    * 設計書と CLAUDE.md に固有の規約を置いているため、上書きされると困る。
    */
   agentRules: false,
+  /**
+   * 開発時のインジケータを出さない。画面左下に重なり、タブバーの「ホーム」を
+   * 隠してしまうため（動作確認の妨げになる）。
+   */
+  devIndicators: false,
 };
 
 export default nextConfig;

@@ -72,4 +72,14 @@ npm run db:seed && npm run dev
 ```
 
 `.env.local` に `AUTH_MODE=dev` を書くと認証を省いて画面を確認できます。
+
+見た目を変えたときは、**必ず画像で確認**してください。
+
+```bash
+npm run screenshot
+```
+
+主要9画面を `.screenshots/` に出力し、ブラウザが実際に計算した色も表示します。
+「CSS は正しいのに画面が変わらない」を推測で片付けないための道具です。
+
 詳しくは `README.md` を参照。

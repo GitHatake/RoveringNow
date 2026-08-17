@@ -17,8 +17,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "verify": "npm run lint && npm run typecheck && npm run test",
-    "db:seed": "tsx scripts/seed.ts",
-    "db:reset": "rm -rf .data && tsx scripts/seed.ts"
+    "db:seed": "tsx --conditions=react-server scripts/seed.ts",
+    "db:reset": "rm -rf .data && npm run db:seed",
+    "screenshot": "tsx --conditions=react-server scripts/screenshot.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
@@ -41,6 +42,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.3.1",
+    "playwright": "^1.62.1",
     "tsx": "^4.23.12",
     "typescript": "^5.9.0",
     "vitest": "^4.1.10"

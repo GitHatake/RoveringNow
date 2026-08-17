@@ -2,6 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  BellIcon,
+  CollectionIcon,
+  HomeIcon,
+  PersonIcon,
+  ScanIcon,
+} from '@/components/icons';
 
 /**
  * グローバルナビゲーション（デザインシステム 第6.5節）
@@ -10,11 +17,11 @@ import { usePathname } from 'next/navigation';
  * カード交換・グループ参加の共通入口であり、現場で数秒で到達する必要があるため。
  */
 const TABS = [
-  { href: '/', icon: '🏠', label: 'ホーム' },
-  { href: '/collection', icon: '📔', label: 'コレクション' },
-  { href: '/scan', icon: '⌗', label: 'スキャン', scan: true },
-  { href: '/notifications', icon: '🔔', label: '通知' },
-  { href: '/mypage', icon: '👤', label: 'マイページ' },
+  { href: '/', label: 'ホーム', Icon: HomeIcon },
+  { href: '/collection', label: 'コレクション', Icon: CollectionIcon },
+  { href: '/scan', label: 'スキャン', Icon: ScanIcon, scan: true },
+  { href: '/notifications', label: '通知', Icon: BellIcon },
+  { href: '/mypage', label: 'マイページ', Icon: PersonIcon },
 ] as const;
 
 export function TabBar({ unreadCount }: { unreadCount: number }) {
@@ -24,15 +31,16 @@ export function TabBar({ unreadCount }: { unreadCount: number }) {
     <nav className="tabbar" aria-label="メインナビゲーション">
       {TABS.map((tab) => {
         const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
+        const isScan = 'scan' in tab && tab.scan;
         return (
           <Link
             key={tab.href}
             href={tab.href}
             aria-current={active ? 'page' : undefined}
-            className={'scan' in tab && tab.scan ? 'scan' : undefined}
+            className={isScan ? 'scan' : undefined}
           >
-            <span className="icon" aria-hidden="true">
-              {tab.icon}
+            <span className="icon">
+              <tab.Icon size={isScan ? 24 : 22} />
             </span>
             {tab.href === '/notifications' && unreadCount > 0 ? (
               <span className="badge-dot" aria-hidden="true" />

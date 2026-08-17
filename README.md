@@ -73,6 +73,17 @@ AUTH_MODE=dev
 npm run db:reset      # .data/ を消して投入し直す
 ```
 
+### 画面を画像で確認する
+
+```bash
+npm run screenshot                    # 既定は http://localhost:3100
+npm run screenshot -- http://localhost:3000
+```
+
+`.screenshots/` に主要9画面（ライト／ダーク）を出力し、あわせて**ブラウザが実際に
+計算した色**（`getComputedStyle`）を表示します。「CSS は正しいのに画面が変わらない」
+という状況を、推測ではなく実測で切り分けるために用意しています。
+
 ---
 
 ## 開発

@@ -234,7 +234,8 @@ body {
 }
 
 .tabbar .icon {
-  font-size: 20px;
+  display: grid;
+  place-items: center;
   line-height: 1;
 }
 
@@ -516,8 +517,8 @@ body {
   margin: calc(var(--sp-4) * -1);
   padding: var(--sp-6) var(--sp-4);
   background-color: var(--c-paper);
-  background-image: radial-gradient(rgb(0 0 0 / 3%) 1px, transparent 0);
-  background-size: 3px 3px;
+  background-image: radial-gradient(rgb(4 56 76 / 4%) 0.5px, transparent 0.5px);
+  background-size: 5px 5px;
   min-height: 60vh;
 }
 
@@ -527,15 +528,24 @@ body {
   gap: var(--sp-4);
 }
 
+/*
+ * 箔押しの見立て：縁は箔の色で統一し、地はスタンプごとの色をごく淡く敷く。
+ * 縁にスタンプごとの色を使うと、並べたときに統一感が失われる（第7.2節）。
+ */
 .stamp {
+  --stamp-color: var(--c-foil);
   display: grid;
   place-items: center;
   aspect-ratio: 1;
   border: 1.5px solid var(--c-foil);
   border-radius: var(--r-full);
-  background: var(--c-surface);
+  background: color-mix(in srgb, var(--stamp-color) 22%, var(--c-surface));
   box-shadow: var(--shadow-stamp);
   font-size: 28px;
+}
+
+@supports not (background: color-mix(in srgb, red 10%, white)) {
+  .stamp { background: var(--c-surface); }
 }
 .stamp.hexagon { border-radius: 18%; }
 .stamp.shield { border-radius: 46% 46% 30% 30%; }
