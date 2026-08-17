@@ -295,7 +295,7 @@ erDiagram
 |---|---|---|---|
 | `post_id` | `uuid` | NOT NULL, FK→posts | |
 | `user_id` | `uuid` | NOT NULL, FK→users | |
-| `source_group_id` | `uuid` | NOT NULL, FK→groups | **どのグループ経由で届いたか。**ミュート判定に用いる |
+| `source_group_id` | `uuid` | NOT NULL, FK→groups | **連絡を投稿したグループ。**ミュート判定に用いる（決定 T-18） |
 | `post_created_at` | `timestamptz` | NOT NULL | `posts.created_at` の複製 |
 
 - 主キー：`(post_id, user_id)`
@@ -502,13 +502,14 @@ WITH RECURSIVE subtree AS (
               AND e.excluded_group_id = c.id
        )
 )
-SELECT DISTINCT ON (m.user_id)
+SELECT DISTINCT
        m.user_id,
-       m.group_id AS source_group_id             -- どのグループ経由で届いたか
+       :origin_group_id AS source_group_id       -- 配信元＝連絡を投稿したグループ
   FROM memberships m
   JOIN subtree s ON s.id = m.group_id
+  JOIN users u ON u.id = m.user_id
  WHERE m.status = 'active'
- ORDER BY m.user_id, s.depth ASC;                -- 重複時は最も近いグループを採用
+   AND u.status = 'active';
 ```
 
 **設計上の要点**
@@ -518,8 +519,9 @@ SELECT DISTINCT ON (m.user_id)
 | `parent_group_id` は承認済みのみ | 承認前の親子関係はそもそも `groups` に反映されないため（第2章）、クエリ側で状態を意識しなくてよい |
 | アーカイブ・休眠はその配下ごと除外 | 再帰の継続条件に含めているため、休眠グループの下にぶら下がる孫も自動的に除外される |
 | 切断は起点グループごとに判定 | `ancestor_group_id = :origin_group_id` で絞る。直上の親からの配信には影響しない |
-| 重複排除 | `DISTINCT ON (m.user_id)` で1人1件に絞る（基本設計書 第9.3節 規則1） |
-| 経由グループの決定 | `depth` の昇順で並べ、**最も近いグループを配信元として記録する**。ミュートの判定が直感に合う（自分の団経由で届いたものは団のミュートで消える） |
+| 重複排除 | `DISTINCT` で1人1件に絞る（基本設計書 第9.3節 規則1） |
+| 配信元グループの記録 | **連絡を投稿したグループ**を記録する（決定 T-18）。対象者の所属グループではない |
+| 停止・退会した利用者の除外 | `users.status = 'active'` で絞る。ログインできない利用者を対象に含めない |
 | 深さ上限 | 万一の循環に対する最後の防御。上限に達した場合は記録を残す |
 
 `PostgreSQL` の再帰CTEには訪問済み管理の組み込み機能（`CYCLE` 句、PostgreSQL 14以降）もある。実装時には `CYCLE id SET is_cycle USING path` の採用を検討する。
@@ -641,7 +643,7 @@ SELECT ps.endpoint, ps.p256dh, ps.auth
 | T-15 | 主キー | `uuid`（`gen_random_uuid()`） | 2026-08-17 | 識別子がQRやURLに現れるため、連番だと他の資源を推測できる |
 | T-16 | 削除の扱い | 物理削除せず状態列で表す。ただし `profile_cards` は退会時に物理削除する | 2026-08-17 | 記録の無期限保持（決定43）と参照整合性の保護。カードのみ例外なのは、他者のコレクションからも消す必要があるため |
 | T-17 | 親子関係と認証の分離 | `groups` から申請テーブルへ分離し、`groups.parent_group_id` には承認済みのみを入れる | 2026-08-17 | 却下・再申請の履歴が残る。配信のクエリが承認状態を意識しなくてよくなり、再帰探索が単純になる |
-| T-18 | 配信元グループの決定 | 複数経路で届く場合、**最も近い（depth が小さい）グループ**を配信元として記録する | 2026-08-17 | ミュートの判定が直感に合う。自分の団経由で届いた連絡は、団のミュートで消える |
+| T-18 | 配信元グループの定義 | `source_group_id` には**連絡を投稿したグループ**を記録する（対象者の所属グループではない） | 2026-08-17 | 所属グループを基準にすると、県連盟の配下配信を静かにするために自分の団をミュートすることになり、団自身の連絡まで消える。基本設計書 第10.3節が避けようとしている失敗そのものになる |
 | T-19 | タイムラインの並べ替え | `post_audiences` に `post_created_at` を複製し、単一テーブルで並べ替えを完結させる | 2026-08-17 | 結合後の並べ替えを避ける。投稿日時は変化しないため不整合が起きない |
 | T-20 | ページング | カーソル方式とする（`OFFSET` を使わない） | 2026-08-17 | 先頭が伸び続ける一覧では `OFFSET` は表示がずれる。件数が増えたときの劣化も避けられる |
 | T-21 | つながりの正規化 | `CHECK (user_a_id < user_b_id)` を課す | 2026-08-17 | `(A,B)` と `(B,A)` の二重登録を、アプリの実装に依存せずデータベースで防ぐ |
