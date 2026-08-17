@@ -10,34 +10,37 @@
  */
 
 :root {
-  /* --- ニュートラル（ウォームグレー） --- */
-  --c-bg: #fafaf9;
+  /* --- ニュートラル（クールグレー。RCJ の #e2e5e8 / #b8bcc0 の系統） --- */
+  --c-bg: #f7f9fa;
   --c-surface: #ffffff;
-  --c-surface-sunken: #f5f5f4;
-  --c-border: #e7e5e4;
-  --c-border-strong: #d6d3d1;
-  --c-text-subtle: #6e6762;
-  --c-text-muted: #57534e;
-  --c-text: #292524;
-  --c-text-strong: #1c1917;
+  --c-surface-sunken: #eef2f5;
+  --c-border: #dde5e9;
+  --c-border-strong: #c2ced5;
+  --c-text-subtle: #5c6b74;
+  --c-text-muted: #41535d;
+  --c-text: #1f2d35;
+  /* 見出しは RCJ / ROVERPORT のブランド色そのもの（--color_htag: #04384c） */
+  --c-text-strong: #04384c;
 
-  /* --- アクセント（深緑）。「押せる」「今ここ」「達成した」にのみ用いる --- */
-  --c-accent-bg: #edf5f0;
-  --c-accent-border: #b7d5c5;
-  --c-accent: #2d6a4f;
-  --c-accent-hover: #245740;
-  --c-accent-text: #1b4332;
+  /* --- アクセント。ブランド色 #04384c と同じ色相から起こした、明るく澄んだ青 --- */
+  --c-accent-bg: #e8f4f8;
+  --c-accent-border: #a5d0e0;
+  --c-accent: #0f6b8a;
+  --c-accent-hover: #0a5972;
+  --c-accent-text: #0a4f66;
+  /* アクセント面の上に置く文字。テーマで反転する */
+  --c-on-accent: #ffffff;
 
   /* --- セマンティック --- */
-  --c-danger: #a4161a;
-  --c-danger-bg: #fbeaea;
-  --c-warning: #b45309;
-  --c-info: #2d6a4f;
+  --c-danger: #b3261e;
+  --c-danger-bg: #fdecea;
+  --c-warning: #8a5a00;
+  --c-info: #0f6b8a;
 
-  /* --- コレクション（愛着の層）。この領域だけ紙の地とする --- */
-  --c-paper: #f7f3ec;
-  --c-foil: #c9a227;
-  --c-foil-silver: #8a8580;
+  /* --- コレクション（愛着の層）。RCJ のトープとクールグレーを箔に使う --- */
+  --c-paper: #f8f7f4;
+  --c-foil: #9b8d77;
+  --c-foil-silver: #b8bcc0;
 
   /* --- タイポグラフィ --- */
   --font-sans:
@@ -69,9 +72,9 @@
   --r-full: 9999px;
 
   /* --- 奥行き。実用の層では影を使わない --- */
-  --shadow-sheet: 0 -2px 16px rgb(28 25 23 / 8%);
-  --shadow-stamp: 0 1px 2px rgb(0 0 0 / 10%);
-  --shadow-card: 0 2px 6px rgb(0 0 0 / 12%);
+  --shadow-sheet: 0 -2px 16px rgb(4 56 76 / 10%);
+  --shadow-stamp: 0 1px 2px rgb(4 56 76 / 12%);
+  --shadow-card: 0 2px 6px rgb(4 56 76 / 14%);
 
   /* --- レイアウト --- */
   --layout-max-width: 640px;
@@ -86,28 +89,32 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --c-bg: #1c1917;
-    --c-surface: #292524;
-    --c-surface-sunken: #1c1917;
-    --c-border: #44403c;
-    --c-border-strong: #57534e;
-    --c-text-subtle: #a8a29e;
-    --c-text-muted: #d6d3d1;
-    --c-text: #e7e5e4;
-    --c-text-strong: #fafaf9;
+    --c-bg: #0d1a21;
+    --c-surface: #152730;
+    --c-surface-sunken: #0d1a21;
+    --c-border: #2a4049;
+    --c-border-strong: #3d545e;
+    --c-text-subtle: #8fa3ad;
+    --c-text-muted: #b9c8cf;
+    --c-text: #e3ebef;
+    --c-text-strong: #f6fafb;
 
-    --c-accent-bg: #1b3b2c;
-    --c-accent-border: #2d6a4f;
-    --c-accent: #52b788;
-    --c-accent-hover: #74c69d;
-    --c-accent-text: #74c69d;
+    --c-accent-bg: #123c4d;
+    --c-accent-border: #0f6b8a;
+    --c-accent: #4fb3d4;
+    --c-accent-hover: #74c8e4;
+    --c-accent-text: #8ed3ea;
+    /* 明るいアクセントの上に白文字は 2.41:1 しかない。暗い地色を載せる */
+    --c-on-accent: #0d1a21;
 
     --c-danger: #f08c8c;
     --c-danger-bg: #3b1a1a;
-    --c-warning: #e8a33d;
-    --c-info: #52b788;
+    --c-warning: #e0a03a;
+    --c-info: #4fb3d4;
 
-    --c-paper: #22201d;
+    --c-paper: #141f24;
+    --c-foil: #b0a48f;
+    --c-foil-silver: #7d8b93;
   }
 }
 
@@ -174,7 +181,7 @@ body {
   gap: var(--sp-3);
   min-height: 56px;
   padding: 0 var(--sp-4);
-  background: var(--c-bg);
+  background: var(--c-surface);
   border-bottom: 1px solid var(--c-border);
 }
 
@@ -239,7 +246,7 @@ body {
   height: 48px;
   border-radius: var(--r-full);
   background: var(--c-accent);
-  color: #fff;
+  color: var(--c-on-accent);
 }
 
 .tabbar .badge-dot {
@@ -271,7 +278,7 @@ body {
 
 .btn-primary {
   background: var(--c-accent);
-  color: #fff;
+  color: var(--c-on-accent);
 }
 .btn-primary:hover:not(:disabled) { background: var(--c-accent-hover); }
 
@@ -303,7 +310,7 @@ body {
   margin-left: var(--sp-1);
   border-radius: var(--r-full);
   background: var(--c-accent);
-  color: #fff;
+  color: var(--c-on-accent);
   font-size: 10px;
   line-height: 1;
   vertical-align: 1px;
@@ -311,10 +318,12 @@ body {
 
 /* --- 連絡カード --- */
 .post {
-  padding: var(--sp-6) 0;
-  border-bottom: 1px solid var(--c-border);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
 }
-.post:first-child { padding-top: var(--sp-4); }
 
 .post-group {
   font-size: var(--fs-subtitle);
@@ -372,7 +381,7 @@ body {
   width: 24px;
   height: 24px;
   margin-right: -8px;
-  border: 2px solid var(--c-bg);
+  border: 2px solid var(--c-surface);
   border-radius: var(--r-full);
   background: var(--c-accent-bg);
   color: var(--c-accent-text);
